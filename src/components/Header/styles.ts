@@ -11,6 +11,7 @@ export const Container = styled.div`
 
   h1 {
     color: #333;
+    cursor: pointer;
   }
 
   svg {

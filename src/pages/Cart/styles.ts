@@ -1,8 +1,9 @@
+import { IoMdTrash } from 'react-icons/io';
 import styled from 'styled-components';
 
 export const Container = styled.div`
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   padding: 0 20px;
   margin: 10px auto;
   display: flex;
@@ -19,6 +20,11 @@ export const Container = styled.div`
 
   strong {
     color: #333;
+  }
+
+  svg:hover {
+    cursor: pointer;
+    transition: color 0.2s;
   }
 `;
 
@@ -100,19 +106,19 @@ export const ProductAmountContainer = styled.div`
 
   svg {
     color: #18a6a8;
-    margin: 0 5px;
+    margin: 0 auto;
+    transition: color 0.2s;
   }
 
   svg:hover {
-    cursor: pointer;
-    color: #18a6a8;
+    color: #058d8f;
   }
 
   p {
     margin: auto;
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     border-right: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 5px;
+    padding: 5px 8px;
   }
 `;
 
@@ -134,5 +140,23 @@ export const CartDetail = styled.div`
 
   strong {
     font-size: 20px;
+  }
+`;
+
+export const EmptyText = styled.p`
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 10px 10px 5px;
+  text-align: center;
+`;
+
+export const TrashIcon = styled(IoMdTrash)`
+  color: #f73d65;
+  font-size: 22px;
+
+  &:hover {
+    color: #e52b53;
   }
 `;

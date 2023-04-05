@@ -1,78 +1,106 @@
-import React from 'react';
-import { BsPlus } from 'react-icons/bs';
+import React, { useMemo } from 'react';
+import { IoIosAdd, IoIosRemove } from 'react-icons/io';
+import { useSelector, useDispatch } from 'react-redux';
 
+import * as CartActions from '../../store/modules/cart/actions';
+import { IProduct } from '../../store/modules/cart/types';
+import { IApplicationState } from '../../store/types';
+import { formatPrice } from '../../util/format';
 import {
   CartDetail,
   Container,
+  EmptyText,
   ProductAmountContainer,
   ProductHeader,
   ProductItem,
   ProductList,
+  TrashIcon,
 } from './styles';
 
 const Cart: React.FC = () => {
-  const products = [
-    {
-      id: 1,
-      name: 'Jaleco',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 2,
-      name: 'Avental',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 3,
-      name: 'Touca',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 4,
-      name: 'Fronha',
-      price: 'R$ 999,99',
-      available: true,
-    },
-  ];
+  const dispatch = useDispatch();
+  const products = useSelector((state: IApplicationState) =>
+    state.cart.products.map((product) => ({
+      ...product,
+      total: formatPrice((product.price * product.amount) / 100),
+    }))
+  );
+
+  const total = useMemo(() => {
+    const totalValue = products.reduce((totalSum, product) => {
+      return totalSum + product.price * product.amount;
+    }, 0);
+
+    return formatPrice(totalValue / 100);
+  }, [products]);
+
+  function increment(product: IProduct) {
+    dispatch(
+      CartActions.updateAmountRequest({
+        id: product.id,
+        amount: product.amount + 1,
+      })
+    );
+  }
+
+  function decrement(product: IProduct) {
+    dispatch(
+      CartActions.updateAmountRequest({
+        id: product.id,
+        amount: product.amount - 1,
+      })
+    );
+  }
 
   return (
     <Container>
       <span>Meu Carrinho</span>
-      <ProductHeader>
-        <span>Produto</span>
-        <span>Name</span>
-        <span>Valor unitário</span>
-        <span>Quantidade</span>
-        <span>Total</span>
-      </ProductHeader>
-      <ProductList>
-        {products.map((product) => (
-          <ProductItem>
-            <img
-              src="https://images.tcdn.com.br/img/img_prod/991451/touca_gorro_estilo_beanie_estilosa_frio_pratica_de_esportes_249_1_10367008fba56e4ec7160331eaea6adb.jpg"
-              alt="product"
-            />
-            <span>{product.name}</span>
-            <strong>{product.price}</strong>
-            <div>
-              <ProductAmountContainer>
-                <BsPlus size={16} />
-                <p>1</p>
-                <BsPlus size={16} />
-              </ProductAmountContainer>
-            </div>
-            <strong>R$1111,11</strong>
-          </ProductItem>
-        ))}
-      </ProductList>
+      {products.length ? (
+        <>
+          <ProductHeader>
+            <span>Produto</span>
+            <span>Name</span>
+            <span>Valor unitário</span>
+            <span>Quantidade</span>
+            <span>Total</span>
+            <span>Remover</span>
+          </ProductHeader>
+          <ProductList>
+            {products.map((product) => (
+              <ProductItem>
+                <img src={product.images?.[0].path} alt={product.title} />
+                <span>{product.title}</span>
+                <strong>{product.formattedPrice}</strong>
+                <div>
+                  <ProductAmountContainer>
+                    <IoIosRemove size={16} onClick={() => decrement(product)} />
+                    <p>{product.amount}</p>
+                    <IoIosAdd size={16} onClick={() => increment(product)} />
+                  </ProductAmountContainer>
+                </div>
+                <strong>{product.total}</strong>
 
-      <CartDetail>
-        <span>Total</span>
-        <strong>R$1111,11</strong>
-      </CartDetail>
+                <div>
+                  <TrashIcon
+                    onClick={() =>
+                      dispatch(CartActions.removeFromCart({ id: product.id }))
+                    }
+                  />
+                </div>
+              </ProductItem>
+            ))}
+          </ProductList>
+
+          <CartDetail>
+            <span>Total</span>
+            <strong>{total}</strong>
+          </CartDetail>
+        </>
+      ) : (
+        <EmptyText>
+          O carrinho está vazio! Adicione produtos para continuar.
+        </EmptyText>
+      )}
     </Container>
   );
 };

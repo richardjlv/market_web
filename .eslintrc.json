@@ -26,6 +26,7 @@
   ],
   "rules": {
     "prettier/prettier": "error",
+    "no-param-reassign": "off",
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": ["error"],
     "import/no-extraneous-dependencies": "off",
