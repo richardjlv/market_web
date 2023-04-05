@@ -1,34 +1,70 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-import { Container } from './styles';
+import Loading from '../../components/Loading';
+import api from '../../services/api';
+import { IProduct } from '../../store/modules/cart/types';
+import { formatPrice } from '../../util/format';
+import {
+  Container,
+  EmptyText,
+  LoadingContainer,
+  ProductDetails,
+} from './styles';
 
-const ProductDetail: React.FC = () => (
-  <Container>
-    <img
-      src="https://images.tcdn.com.br/img/img_prod/991451/touca_gorro_estilo_beanie_estilosa_frio_pratica_de_esportes_249_1_10367008fba56e4ec7160331eaea6adb.jpg"
-      alt="product"
-    />
+const ProductDetail: React.FC = () => {
+  const [product, setProduct] = useState<IProduct | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { id } = useParams();
 
-    <div>
-      <span>Categoria</span>
-      <h1>Touca</h1>
-      <strong>R$ 99.99</strong>
-      <button type="button">Adicionar ao carrinho</button>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec in erat
-        maximus, mollis mauris congue, luctus quam. Nunc et iaculis erat. Nulla
-        ullamcorper nisi ac turpis molestie, vitae ultricies leo consectetur.
-        Nam sed ex id arcu scelerisque viverra. Aenean vestibulum libero vel
-        tortor elementum, eu malesuada libero vehicula. Maecenas accumsan
-        sagittis cursus. Nam nisi quam, posuere eu porta semper, convallis eget
-        nisl. Duis sit amet tincidunt felis. Fusce ullamcorper lacus metus. In
-        aliquam consectetur fringilla. Fusce varius quam enim, id venenatis
-        risus imperdiet sed. Suspendisse nec sapien aliquam, vehicula urna id,
-        consectetur sapien. Aenean vulputate lobortis molestie. Praesent sed
-        interdum nibh.
-      </p>
-    </div>
-  </Container>
-);
+  useMemo(() => {
+    async function loadProduct() {
+      setLoading(true);
+      try {
+        const { data } = await api.get<IProduct>(`/products/${id}`, {});
+
+        setProduct({
+          ...data,
+          formattedPrice: formatPrice(data.price / 100),
+        });
+      } catch (error) {
+        toast.error('Erro ao carregar produto. Tente novamente mais tarde.');
+      }
+      setLoading(false);
+    }
+    loadProduct();
+  }, [id]);
+
+  return (
+    <Container>
+      {loading ? (
+        <LoadingContainer>
+          <Loading />
+        </LoadingContainer>
+      ) : (
+        <>
+          {product ? (
+            <>
+              <img src={product?.images?.[0].path} alt="product" />
+
+              <ProductDetails>
+                <span>{product?.category.name}</span>
+                <h1>{product?.title}</h1>
+                <strong>{product?.formattedPrice}</strong>
+                <button type="button">Adicionar ao carrinho</button>
+                <p>{product?.description}</p>
+              </ProductDetails>
+            </>
+          ) : (
+            <EmptyText>
+              Erro ao carregar produto. Tente novamente mais tarde.
+            </EmptyText>
+          )}
+        </>
+      )}
+    </Container>
+  );
+};
 
 export default ProductDetail;

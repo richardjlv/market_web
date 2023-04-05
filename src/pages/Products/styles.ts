@@ -23,7 +23,6 @@ export const FilterOptions = styled.div`
     align-items: center;
 
     input {
-      margin-right: 10px;
       padding: 10px;
       border: 0;
       border-bottom: 1px solid rgba(0, 0, 0, 0.3);
@@ -31,14 +30,20 @@ export const FilterOptions = styled.div`
     }
 
     button {
+      margin-left: 10px;
       border: 0;
       border-radius: 20px;
-      padding: 6px 8px;
+      padding: 8px 8px;
+      display: flex;
+      align-items: center;
       background: rgba(0, 0, 0, 0.1);
 
       svg {
-        margin: auto 0;
         font-size: 12px;
+      }
+
+      span {
+        margin-left: 5px;
       }
     }
   }
@@ -87,4 +92,47 @@ export const ProductItem = styled.div`
   strong {
     margin: 0 10px;
   }
+`;
+
+export const PaginationContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  margin-top: 20px;
+
+  span {
+    color: #333;
+    margin: auto 0 5px;
+  }
+
+  button {
+    border: 0;
+    background: 0;
+    margin 0 10px;
+    color: #18a6a8;
+    transition: color 0.2s;
+
+    svg {
+      font-size: 20px;
+    }
+  }
+
+  button:hover {
+    color: #058d8f;
+  }
+
+  button:disabled {
+    color: #ccc;
+  }
+`;
+
+export const EmptyText = styled.p`
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 10px 10px 5px;
+  text-align: center;
 `;

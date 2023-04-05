@@ -14,7 +14,7 @@ export default function Routes() {
     <RoutesWrapper>
       <Route path="/">
         <Route index element={Layout(<Products />)} />
-        <Route path="/product" element={Layout(<ProductDetail />)} />
+        <Route path="/product/:id" element={Layout(<ProductDetail />)} />
         <Route path="/cart" element={Layout(<Cart />)} />
       </Route>
     </RoutesWrapper>

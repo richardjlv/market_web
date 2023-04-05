@@ -1,58 +1,141 @@
-import React from 'react';
-import { BsSearch } from 'react-icons/bs';
+import React, { useEffect, useState } from 'react';
+import {
+  BsArrowLeftCircle,
+  BsArrowRightCircle,
+  BsSearch,
+} from 'react-icons/bs';
+import { MdOutlineClear } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-import { Container, FilterOptions, ProductItem, ProductList } from './styles';
+import Loading from '../../components/Loading';
+import api from '../../services/api';
+import { ICategory, IProduct } from '../../store/modules/cart/types';
+import { formatPrice } from '../../util/format';
+import {
+  Container,
+  EmptyText,
+  FilterOptions,
+  PaginationContainer,
+  ProductItem,
+  ProductList,
+} from './styles';
+
+interface IProductResponse {
+  count: number;
+  products: IProduct[];
+}
+
+interface ICategoriesResponse {
+  categories: ICategory[];
+}
 
 const Products: React.FC = () => {
   const navigate = useNavigate();
-  const products = [
-    {
-      id: 1,
-      name: 'Jaleco',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 2,
-      name: 'Avental',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 3,
-      name: 'Touca',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 4,
-      name: 'Fronha',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 5,
-      name: 'Embalagem',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 6,
-      name: 'Porta talher',
-      price: 'R$ 999,99',
-      available: true,
-    },
-    {
-      id: 7,
-      name: 'Porta absorvente',
-      price: 'R$ 999,99',
-      available: true,
-    },
-  ];
+  const [search, setSearch] = useState<String>();
+  const [loading, setLoading] = useState(false);
+  const countPerPage = 10;
+  const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState<ICategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>();
+  const [orderBy, setOrderBy] = useState<string>();
+  const [canNextPage, setCanNextPage] = useState(false);
+  const [canPreviousPage, setCanPreviousPage] = useState(false);
+  const [products, setProducts] = useState<IProduct[]>([]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const { data } = await api.get<ICategoriesResponse>('/categories');
+        setCategories(data.categories);
+      } catch (error) {
+        toast.error('Erro ao carregar categorias. Tente novamente mais tarde.');
+      }
+    }
+
+    loadCategories();
+  }, []);
+
+  async function loadProducts() {
+    setLoading(true);
+    try {
+      const response = await api.get<IProductResponse>('/products', {
+        params: {
+          search,
+          category: selectedCategory,
+          orderBy,
+        },
+      });
+
+      const data = response.data.products.map((product) => ({
+        ...product,
+        formattedPrice: formatPrice(product.price / 100),
+      }));
+
+      setProducts(data);
+      setCanNextPage(response.data.count > page * countPerPage);
+      setCanPreviousPage(page > 1);
+    } catch (error) {
+      toast.error('Erro ao carregar produtos. Tente novamente mais tarde.');
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadProducts();
+  }, [search, page, orderBy, selectedCategory]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const { value } = event.currentTarget[0] as HTMLInputElement;
+
+    setSearch(value.trim());
+    setPage(0);
+  }
+
+  function clear() {
+    setSearch('');
+    setPage(0);
+  }
+
+  function handleNextPage() {
+    setPage(page + 1);
+  }
+
+  function handlePreviousPage() {
+    setPage(page - 1);
+  }
+
+  const ProductsView = () => {
+    if (products.length > 0) {
+      return (
+        <ProductList>
+          {products.map((product) => (
+            <ProductItem
+              key={product.id}
+              onClick={() => navigate(`/product/${product.id}`)}
+            >
+              <img src={product.images?.[0].path} alt={product.title} />
+              <span>{product.title}</span>
+              <strong>{product.formattedPrice}</strong>
+            </ProductItem>
+          ))}
+        </ProductList>
+      );
+    }
+
+    return <EmptyText>Nenhum produto encontrado</EmptyText>;
+  };
+
+  function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setSelectedCategory(e.target.value);
+    setPage(0);
+  }
+
+  function handleOrderByChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setOrderBy(e.target.value);
+    setPage(0);
   }
 
   return (
@@ -63,34 +146,48 @@ const Products: React.FC = () => {
           <button type="submit">
             <BsSearch />
           </button>
+          {search && (
+            <button type="button" onClick={clear}>
+              <MdOutlineClear />
+              <span>{search}</span>
+            </button>
+          )}
         </form>
 
-        <select>
-          <option value="">Categoria</option>
-          <option value="min_price">Menor preço</option>
-          <option value="max_price">Maior preço</option>
-          <option value="name">Nome</option>
+        <select onChange={handleCategoryChange} value={selectedCategory}>
+          <option value="" hidden>
+            Categoria
+          </option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.name}>
+              {category.name}
+            </option>
+          ))}
         </select>
 
-        <select>
-          <option value="">Ordenar por</option>
-          <option value="min_price">Menor preço</option>
-          <option value="max_price">Maior preço</option>
-          <option value="name">Nome</option>
+        <select onChange={handleOrderByChange} value={orderBy}>
+          <option value="" hidden>
+            Ordenar por
+          </option>
+          <option value="minPrice">Menor preço</option>
+          <option value="maxPrice">Maior preço</option>
+          <option value="title">Nome</option>
         </select>
       </FilterOptions>
-      <ProductList>
-        {products.map((product) => (
-          <ProductItem key={product.id} onClick={() => navigate('/product')}>
-            <img
-              src="https://images.tcdn.com.br/img/img_prod/991451/touca_gorro_estilo_beanie_estilosa_frio_pratica_de_esportes_249_1_10367008fba56e4ec7160331eaea6adb.jpg"
-              alt={product.name}
-            />
-            <span>{product.name}</span>
-            <strong>{product.price}</strong>
-          </ProductItem>
-        ))}
-      </ProductList>
+      {loading ? <Loading /> : <ProductsView />}
+      <PaginationContainer>
+        <button
+          type="button"
+          disabled={!canPreviousPage}
+          onClick={handlePreviousPage}
+        >
+          <BsArrowLeftCircle />
+        </button>
+        <span>{page}</span>
+        <button type="button" disabled={!canNextPage} onClick={handleNextPage}>
+          <BsArrowRightCircle />
+        </button>
+      </PaginationContainer>
     </Container>
   );
 };
