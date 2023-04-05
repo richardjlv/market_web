@@ -78,8 +78,11 @@ export const ProductItem = styled.div`
 
   img {
     align-self: center;
-    max-width: 200px;
-    height: auto;
+    width: 100%;
+    max-width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 5px;
   }
 
   span {
