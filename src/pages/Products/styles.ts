@@ -54,6 +54,7 @@ export const FilterOptions = styled.div`
     background: transparent;
     letter-spacing: 1px;
     margin-left: 20px;
+    text-transform: capitalize;
   }
 `;
 
